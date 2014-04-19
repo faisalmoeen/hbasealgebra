@@ -22,4 +22,11 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <scm>
+    <connection>scm:git:https://github.com/faisalmoeen/hbasealgebra.git</connection>
+    <url>scm:git:https://github.com/faisalmoeen/hbasealgebra.git</url>
+    <developerConnection>scm:git:https://github.com/faisalmoeen/hbasealgebra.git</developerConnection>
+  </scm>
+
 </project>
