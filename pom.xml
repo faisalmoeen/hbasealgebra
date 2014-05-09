@@ -42,7 +42,12 @@
 	  <artifactId>jts</artifactId>
 	  <version>1.13</version>
     </dependency>
-            
+
+    <dependency>
+    	<groupId>org.clojars.ndimiduk</groupId>
+    	<artifactId>geohash-java</artifactId>
+    	<version>1.0.6</version>
+    </dependency>
   </dependencies>
        
   <repositories>

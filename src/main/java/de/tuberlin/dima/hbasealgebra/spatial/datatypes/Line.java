@@ -12,10 +12,10 @@ import de.tuberlin.dima.hbasealgebra.util.Transformer;
 public class Line {
 	private JtsMultiLineString line;
 	
-	public Line(List<List<Point>> points)
+	public Line(List<Curve> lineSegements)
 	{
-		JtsLineString[] ls = new JtsLineString[points.size()];
-		Iterator<List<Point>> i = points.iterator();
+		JtsLineString[] ls = new JtsLineString[lineSegements.size()];
+		Iterator<Curve> i = lineSegements.iterator();
 		int index=0;
 		while(i.hasNext()){
 			ls[index++]=(JtsLineString) new GeometryFactory().createLineString(Transformer.toCoordinate(i.next()));
@@ -30,6 +30,7 @@ public class Line {
 //		this.line=new GeometryFactory().createLineString(coordArray);
 //	}
 	
+
 	public JtsMultiLineString getJtsLine(){
 		return this.line;
 	}

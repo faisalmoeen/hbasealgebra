@@ -13,6 +13,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import ch.hsr.geohash.GeoHash;
 import au.com.bytecode.opencsv.CSVReader;
 import de.tuberlin.dima.hbasealgebra.util.HBaseHelper;
 
@@ -23,21 +24,22 @@ public class CSVLoad {
 	private static HTable table;
 	private static Configuration conf;
 	private static String BerlinMOD="/home/faisal/drive/data/BerlinMOD/";
+	private static double berlinLeftLong = 13.0882097323;
+	private static double berlinRightLong = 13.7606105539;
+	private static double berlinBottomLat = 52.3418234221;
+	private static double berlinTopLat = 52.6697240587;
+	private static double bbikeXOffset = 9267;
+	private static double bbikeYOffset = 2598;
+	private static double berlinLatWidth = berlinTopLat - berlinBottomLat;
+	private static double berlinLongWidth = berlinRightLong - berlinLeftLong;
+	private static double bbikeXWidth = 28329+9267;
+	private static double bbikeYWidth = 26587+2598;
+	private static double xScaleFactor= bbikeXWidth/berlinLongWidth;
+	private static double yScaleFactor= bbikeYWidth/berlinLatWidth;
 	public static void main(String[] args) throws IOException {
 		conf = HBaseConfiguration.create(); // co PutExample-1-CreateConf Create the required configuration.
-		// ^^ PutExample
-		//	    helper = HBaseHelper.getHelper(conf);
-		//	    helper.dropTable("testtable");
-		//	    helper.createTable("testtable", "colfam1");
-		// vv PutExample
-		//	    table = new HTable(conf, "cars"); // NewTable Instantiate a new client.
-		//	    loadCars();
-		try {
-			loadStreets();
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		//			loadStreets();
+		loadTrips();
 
 
 	}
@@ -180,6 +182,48 @@ public class CSVLoad {
 
 			table.put(put); 
 			System.out.println(nextLine[0] + nextLine[1] + "etc...");
+		}
+	}
+	
+	public static void loadTrips() throws IOException
+	{
+		table = new HTable(conf, "trips"); // NewTable Instantiate a new client.
+		CSVReader reader = new CSVReader(new FileReader(BerlinMOD+"trips.csv"));
+		String [] nextLine;
+		reader.readNext();
+		int i=0;
+		while ((nextLine = reader.readNext()) != null) {
+//			Put put = new Put(Bytes.toBytes(nextLine[1])); 
+			double xStart = Double.parseDouble(nextLine[4]);
+			double longStart = ((xStart+bbikeXOffset)/xScaleFactor)+berlinLeftLong;
+			double yStart = Double.parseDouble(nextLine[5]);
+			double latStart = ((yStart+bbikeYOffset)/yScaleFactor)+berlinBottomLat;
+			
+			double xEnd = Double.parseDouble(nextLine[6]);
+			double longEnd = ((xEnd+bbikeXOffset)/xScaleFactor)+berlinLeftLong;
+			double yEnd = Double.parseDouble(nextLine[7]);
+			double latEnd = ((yEnd+bbikeYOffset)/yScaleFactor)+berlinBottomLat;
+			
+			GeoHash hashStart = GeoHash.withCharacterPrecision(latStart, longStart, 12);
+//			System.out.println(xStart+"\t"+yStart+"\t"+longStart+"\t"+latStart+"\t"+hashStart.toBase32());
+			GeoHash hashEnd = GeoHash.withCharacterPrecision(latEnd, longEnd, 12);
+//			System.out.println(xEnd+"\t"+yEnd+"\t"+longEnd+"\t"+latEnd+"\t"+hashEnd.toBase32());
+			
+			Put put = new Put(Bytes.toBytes(hashStart.toBase32()));
+			
+			put.add(Bytes.toBytes("a"), Bytes.toBytes("Moid"),
+					Bytes.toBytes(nextLine[0])); 
+			put.add(Bytes.toBytes("a"), Bytes.toBytes("Tstart"),
+					Bytes.toBytes(nextLine[2])); 
+			put.add(Bytes.toBytes("a"), Bytes.toBytes("Tend"),
+					Bytes.toBytes(nextLine[3]));
+			put.add(Bytes.toBytes("a"), Bytes.toBytes("Pend"),
+					Bytes.toBytes(hashEnd.toBase32()));
+
+
+			table.put(put); 
+//			System.out.println(nextLine[0] + nextLine[1] + "etc...");
+			System.out.println(i++);
 		}
 	}
 

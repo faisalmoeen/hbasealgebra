@@ -37,13 +37,13 @@ public class Operators {
 	//Projects the complete mpoint into the 2D space.
 	public Line trajectory(mPoint mpoint)
 	{
-		return null;
+		return mpoint.getTrajectory();
 	}
 	
 	//Extract the instant (timestamp) from the (instant , point) pair.
 	public Instant inst(iPoint ipoint)
 	{
-		return null;
+		return ipoint.getInstant();
 	}
 	
 	//Computes the spatio-temporal intersection of its arguments. 
