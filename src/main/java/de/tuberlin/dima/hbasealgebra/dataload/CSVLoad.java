@@ -16,6 +16,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import ch.hsr.geohash.GeoHash;
 import au.com.bytecode.opencsv.CSVReader;
 import de.tuberlin.dima.hbasealgebra.util.HBaseHelper;
+import de.tuberlin.dima.hbasealgebra.util.Transformer;
 
 
 public class CSVLoad {
@@ -24,19 +25,7 @@ public class CSVLoad {
 	private static HTable table;
 	private static Configuration conf;
 	private static String BerlinMOD="/home/faisal/drive/data/BerlinMOD/";
-	private static double berlinLeftLong = 13.0882097323;
-	private static double berlinRightLong = 13.7606105539;
-	private static double berlinBottomLat = 52.3418234221;
-	private static double berlinTopLat = 52.6697240587;
-	private static double bbikeXOffset = 9267;
-	private static double bbikeYOffset = 2598;
-	private static double berlinLatWidth = berlinTopLat - berlinBottomLat;
-	private static double berlinLongWidth = berlinRightLong - berlinLeftLong;
-	private static double bbikeXWidth = 28329+9267;
-	private static double bbikeYWidth = 26587+2598;
-	private static double xScaleFactor= bbikeXWidth/berlinLongWidth;
-	private static double yScaleFactor= bbikeYWidth/berlinLatWidth;
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ParseException {
 		conf = HBaseConfiguration.create(); // co PutExample-1-CreateConf Create the required configuration.
 		//			loadStreets();
 		loadTrips();
@@ -144,7 +133,21 @@ public class CSVLoad {
 	private static long timestampToLong(String timestamp) throws ParseException
 	{
 		SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		Date d = f.parse(timestamp);
+		Date d=null;
+		try {
+			d = f.parse(timestamp);
+		} catch (ParseException e) {
+			if(timestamp.length()==10){
+				timestamp=timestamp+" "+"23:00:00.000";
+			}else if(timestamp.length()==16){
+				timestamp=timestamp+":00.000";
+			}else if(timestamp.length()==19){
+				timestamp=timestamp+".000";
+			}else{
+				throw new ParseException("Parse Exception for : "+timestamp, 0);
+			}
+			d = f.parse(timestamp);
+		}
 		return d.getTime();
 	}
 	public static void loadQueryInstants() throws IOException, ParseException
@@ -185,7 +188,7 @@ public class CSVLoad {
 		}
 	}
 	
-	public static void loadTrips() throws IOException
+	public static void loadTrips() throws IOException, ParseException
 	{
 		table = new HTable(conf, "trips"); // NewTable Instantiate a new client.
 		CSVReader reader = new CSVReader(new FileReader(BerlinMOD+"trips.csv"));
@@ -195,14 +198,14 @@ public class CSVLoad {
 		while ((nextLine = reader.readNext()) != null) {
 //			Put put = new Put(Bytes.toBytes(nextLine[1])); 
 			double xStart = Double.parseDouble(nextLine[4]);
-			double longStart = ((xStart+bbikeXOffset)/xScaleFactor)+berlinLeftLong;
+			double longStart = Transformer.toLong(xStart);
 			double yStart = Double.parseDouble(nextLine[5]);
-			double latStart = ((yStart+bbikeYOffset)/yScaleFactor)+berlinBottomLat;
+			double latStart = Transformer.toLat(yStart);
 			
 			double xEnd = Double.parseDouble(nextLine[6]);
-			double longEnd = ((xEnd+bbikeXOffset)/xScaleFactor)+berlinLeftLong;
+			double longEnd = Transformer.toLong(xEnd);
 			double yEnd = Double.parseDouble(nextLine[7]);
-			double latEnd = ((yEnd+bbikeYOffset)/yScaleFactor)+berlinBottomLat;
+			double latEnd = Transformer.toLat(yEnd);
 			
 			GeoHash hashStart = GeoHash.withCharacterPrecision(latStart, longStart, 12);
 //			System.out.println(xStart+"\t"+yStart+"\t"+longStart+"\t"+latStart+"\t"+hashStart.toBase32());
@@ -214,12 +217,12 @@ public class CSVLoad {
 			put.add(Bytes.toBytes("a"), Bytes.toBytes("Moid"),
 					Bytes.toBytes(nextLine[0])); 
 			put.add(Bytes.toBytes("a"), Bytes.toBytes("Tstart"),
-					Bytes.toBytes(nextLine[2])); 
+					Bytes.toBytes(timestampToLong(nextLine[2]))); 
 			put.add(Bytes.toBytes("a"), Bytes.toBytes("Tend"),
-					Bytes.toBytes(nextLine[3]));
+					Bytes.toBytes(timestampToLong(nextLine[3])));
 			put.add(Bytes.toBytes("a"), Bytes.toBytes("Pend"),
 					Bytes.toBytes(hashEnd.toBase32()));
-
+			
 
 			table.put(put); 
 //			System.out.println(nextLine[0] + nextLine[1] + "etc...");
