@@ -88,5 +88,22 @@ public class AlgebraRegionObserver extends BaseRegionObserver{
 		System.out.println("In preScannerOpen()");
 		return super.preScannerOpen(e, scan, s);
 	}
+
+	@Override
+	public void postGetClosestRowBefore(
+			ObserverContext<RegionCoprocessorEnvironment> e, byte[] row,
+			byte[] family, Result result) throws IOException {
+		System.out.println("In postGetClosestRowBefore()");
+		super.postGetClosestRowBefore(e, row, family, result);
+	}
+
+	@Override
+	public void postGet(ObserverContext<RegionCoprocessorEnvironment> e,
+			Get get, List<KeyValue> results) throws IOException {
+		System.out.println("In postGet()");
+		super.postGet(e, get, results);
+	}
+	
+	
 	
 }

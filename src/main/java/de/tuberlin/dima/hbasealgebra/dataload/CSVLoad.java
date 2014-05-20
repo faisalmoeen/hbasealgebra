@@ -212,12 +212,12 @@ public class CSVLoad {
 			GeoHash hashEnd = GeoHash.withCharacterPrecision(latEnd, longEnd, 12);
 //			System.out.println(xEnd+"\t"+yEnd+"\t"+longEnd+"\t"+latEnd+"\t"+hashEnd.toBase32());
 			
-			Put put = new Put(Bytes.toBytes(hashStart.toBase32()));
+			Put put = new Put(Bytes.toBytes(hashStart.toBase32()+timestampToLong(nextLine[2])));
 			
 			put.add(Bytes.toBytes("a"), Bytes.toBytes("Moid"),
 					Bytes.toBytes(nextLine[0])); 
-			put.add(Bytes.toBytes("a"), Bytes.toBytes("Tstart"),
-					Bytes.toBytes(timestampToLong(nextLine[2]))); 
+//			put.add(Bytes.toBytes("a"), Bytes.toBytes("Tstart"),
+//					Bytes.toBytes(timestampToLong(nextLine[2]))); 
 			put.add(Bytes.toBytes("a"), Bytes.toBytes("Tend"),
 					Bytes.toBytes(timestampToLong(nextLine[3])));
 			put.add(Bytes.toBytes("a"), Bytes.toBytes("Pend"),

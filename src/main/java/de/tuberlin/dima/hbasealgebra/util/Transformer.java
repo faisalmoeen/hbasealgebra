@@ -65,4 +65,20 @@ public class Transformer {
 	public static double toNorthing(double lat){
 		return (lat-berlinBottomLat)*yScaleFactor - bbikeYOffset;
 	}
+	
+	public static double getLeftLong(){
+		return berlinLeftLong;
+	}
+	
+	public static double getRightLong(){
+		return berlinRightLong;
+	}
+	
+	public static double getBottomLat(){
+		return berlinBottomLat;
+	}
+	
+	public static double getTopLat(){
+		return berlinTopLat;
+	}
 }

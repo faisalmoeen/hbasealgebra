@@ -4,18 +4,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import ch.hsr.geohash.GeoHash;
+import de.tuberlin.dima.hbasealgebra.coprocessors.QueryProtocol;
+import de.tuberlin.dima.hbasealgebra.coprocessors.QueryProtocolImpl;
 import de.tuberlin.dima.hbasealgebra.dal.Tuple;
+import de.tuberlin.dima.hbasealgebra.util.Transformer;
 
 public class Client {
 	@SuppressWarnings("deprecation")
@@ -60,7 +64,22 @@ public class Client {
 		return Tuple.createTuple(result);
 	}
 	
-	public static void main(String[] args) throws IOException{
+	public void distributedFeed() throws IOException, Throwable{
+		HTableInterface table = pool.getTable("trips");
+		final byte[] startKey= Bytes.toBytes((GeoHash.withCharacterPrecision(Transformer.getBottomLat(), Transformer.getLeftLong(), 12)).toBase32());
+		final byte[] endKey= Bytes.toBytes((GeoHash.withCharacterPrecision(Transformer.getTopLat(), Transformer.getRightLong(), 12)).toBase32());
+		Batch.Call<QueryProtocol, List<Tuple>> callable =
+				new Batch.Call<QueryProtocol, List<Tuple>>() {
+
+					public List<Tuple> call(QueryProtocol instance)
+							throws IOException {
+						return instance.feed();
+					}
+				};
+				Map<byte[], List<Tuple>> result= table.coprocessorExec(QueryProtocol.class, Bytes.toBytes("0000000000000000000000000"), Bytes.toBytes("zzzzzzzzzzzzzzzzzzzzzzzzz"), callable);
+	}
+	
+	public static void main(String[] args) throws Throwable{
 		HTablePool pool = new HTablePool();
 		Client cl = new Client(pool);
 //		Iterator<Tuple> i = cl.feed("trips", Bytes.toBytes("a"));
@@ -71,11 +90,14 @@ public class Client {
 //		Tuple tuple = cl.get("trips", Bytes.toBytes("u33fb1d3hkj3"), Bytes.toBytes("a"));
 //		tuple.print();
 		//**************************************
-		List<Tuple> tupleList = cl.get("trips", Bytes.toBytes("u33fb1d3hkj3"), Bytes.toBytes("a"),Integer.MAX_VALUE);
-		Iterator<Tuple> i = tupleList.iterator();
-		while(i.hasNext()){
-			Tuple tuple = i.next();
-			tuple.print();
-		}
+//		List<Tuple> tupleList = cl.get("trips", Bytes.toBytes("u33fb1d3hkj3"), Bytes.toBytes("a"),Integer.MAX_VALUE);
+//		Iterator<Tuple> i = tupleList.iterator();
+//		while(i.hasNext()){
+//			Tuple tuple = i.next();
+//			tuple.print();
+//		}
+		//**************************************
+		
+		cl.distributedFeed();
 	}
 }
