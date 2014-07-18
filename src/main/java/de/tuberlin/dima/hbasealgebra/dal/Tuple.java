@@ -1,5 +1,8 @@
 package de.tuberlin.dima.hbasealgebra.dal;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -7,11 +10,12 @@ import java.util.List;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.io.HbaseObjectWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import ch.hsr.geohash.GeoHash;
 
-public class Tuple {
+public class Tuple extends HbaseObjectWritable{
 	private String moId;
 	private Date tStart;
 	private Date tEnd;
@@ -33,6 +37,10 @@ public class Tuple {
 		this.yStart = yStart;
 		this.xEnd = xEnd;
 		this.yEnd = yEnd;
+	}
+	
+	public Tuple(){
+		
 	}
 	
 	public void print(){
@@ -126,8 +134,34 @@ public class Tuple {
 
 	@Override
 	public String toString() {
-		return new String(Double.toString(xStart));
+		return new String(moId+":"+tStart.getTime()+":"+tEnd.getTime()+":"+Double.toString(xStart)
+				+":"+Double.toString(yStart)+":"+Double.toString(xEnd)+":"+Double.toString(yEnd));
 	}
+
+	@Override
+	public void readFields(DataInput in) throws IOException {
+		moId=in.readUTF();
+		tStart=new Date(in.readLong());
+		tEnd=new Date(in.readLong());
+		xStart=in.readDouble();
+		yStart=in.readDouble();
+		xEnd=in.readDouble();
+		yEnd=in.readDouble();
+//		super.readFields(in);
+	}
+
+	@Override
+	public void write(DataOutput out) throws IOException {
+		out.writeUTF(moId);
+		out.writeLong(tStart.getTime());
+		out.writeLong(tEnd.getTime());
+		out.writeDouble(xStart);
+		out.writeDouble(yStart);
+		out.writeDouble(xEnd);
+		out.writeDouble(yEnd);
+//		super.write(out);
+	}
+	
 	
 	
 	

@@ -35,7 +35,6 @@ public class RevFunction extends ScalarFunction {
         if (!arg.evaluate(tuple, ptr)) {
             return false;
         }
-        // TODO: optimize
         // Convert the bytes pointed to into a String passing along any
         // modifiers that need to be applied (for example the bytes
         // may need to be inverted if they're stored DESCENDING)

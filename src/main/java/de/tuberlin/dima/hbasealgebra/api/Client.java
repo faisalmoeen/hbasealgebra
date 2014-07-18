@@ -66,6 +66,10 @@ public class Client {
 	
 	public void distributedFeed() throws IOException, Throwable{
 		HTableInterface table = pool.getTable("trips");
+		distributedFeed(table);
+	}
+	public List<Tuple> distributedFeed(HTableInterface table) throws IOException, Throwable{
+		
 		final byte[] startKey= Bytes.toBytes((GeoHash.withCharacterPrecision(Transformer.getBottomLat(), Transformer.getLeftLong(), 12)).toBase32());
 		final byte[] endKey= Bytes.toBytes((GeoHash.withCharacterPrecision(Transformer.getTopLat(), Transformer.getRightLong(), 12)).toBase32());
 		Batch.Call<QueryProtocol, List<Tuple>> callable =
@@ -77,6 +81,9 @@ public class Client {
 					}
 				};
 				Map<byte[], List<Tuple>> result= table.coprocessorExec(QueryProtocol.class, Bytes.toBytes("0000000000000000000000000"), Bytes.toBytes("zzzzzzzzzzzzzzzzzzzzzzzzz"), callable);
+				System.out.println(result.size());
+				Iterator<List<Tuple>> i = result.values().iterator();
+				return (i.hasNext()?i.next():null);
 	}
 	
 	public static void main(String[] args) throws Throwable{

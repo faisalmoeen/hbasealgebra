@@ -39,7 +39,7 @@ public class QueryProtocolImpl extends BaseEndpointCoprocessor implements
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return null;
+		return tupleList;
 	}
 
 	public List<Tuple> feedWithFilter(Object filter) {

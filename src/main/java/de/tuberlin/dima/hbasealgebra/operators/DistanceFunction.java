@@ -48,7 +48,6 @@ public class DistanceFunction extends ScalarFunction {
 		try {
 			dArray1 = (double[])((PrimitiveDoublePhoenixArray) PDataType.DOUBLE_ARRAY.toObject(ptr.get(),ptr.getOffset(),ptr.getLength(),arg1.getDataType())).getArray();
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
